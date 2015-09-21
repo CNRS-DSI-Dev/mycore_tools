@@ -1,18 +1,15 @@
 #!/bin/bash
 
-## VERSION
-# Ce script shell a à ce jour été testé avec la version 7.0.5 d'ownCloud version communautaire, sous Linux Red Hat.
-
 ## PREAMBULE
-# Ce script est développé dans le cadre du déploiement de ownCloud au CNRS
-# Ce script est fourni par le CNRS mais doit faire l'objet d'une adaptation par l'exploitant du service avant installation.
+# Ce script est fourni par le CNRS au prestataire mais doit faire l'objet d'une validation par l'exploitant avant installation.
 
 ## DESCRIPTION
 # Script dedié à tracer les utilisateurs locaux créés. Un email sera envoyé en renseignant les comptes créés, par qui et quand.
 # Il permet également de lister les comptes inactifs depuis une durée donnée et de lister les groupes vides.
 # Il permet également de lister les comptes n'ayant pas le quota par défaut.
 # Il permet également de lister tous les utilisateurs avec leurs groupes d'appartenance, leurs quota et leur dernière date de connexion
-# Il permet également de lister les migrations en cours (en lien avec l'app ownCloud user_files_migrate).
+# Il permet également de lister les migrations en cours.
+# Il permet également de lister les requêtes de restauration en cours.
 
 ## PREREQUIS
 # mutt doit être installé
@@ -26,7 +23,7 @@ admins="xxx"
 # Adresse expediteur
 expadd="xxx"
 # Nom expediteur
-expname="Service My CoRe"
+expname="xxx"
 # Instance BDD
 instance="xxx"
 # Utilisateur BDD
@@ -39,16 +36,18 @@ db_host="xxx"
 db_port="xxx"
 # Url du Service
 service="xxx"
-# Nombre de jours d'inactivité des comptes
-old_days="180"
+# Nombre de jours d'innactivité des comptes
+old_days="30"
 # Nombre de jours au bout duquel le compte sera succeptible d'être supprimé
-expiration="360"
+expiration="90"
 # Quota par défaut
 default_quota=""
 # Chemin de Owncloud
 ownclouddir="xxx"
-# Options disponibles : grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr
+# Options disponibles : grp_null,local_usr,old_usr,non_def_quota,list_usr|list_migr|list_resto|del_old_usr
 command=$1
+# Nom du compte apache
+apache_user="xxx"
 
 # Commande de listing des users locaux
         if [[ $command == "local_usr" ]]
@@ -74,7 +73,7 @@ command=$1
         elif [[ $command == "non_def_quota" ]]
         then
                 # on récupère en base les utilisateurs et leur quota personnalisé
-                echo "SELECT userid, configvalue FROM  oc_preferences WHERE (configkey =  'quota' AND configvalue <> 'default');"| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance > mail_content
+                echo "SELECT userid, configvalue FROM  oc_preferences WHERE (configkey =  'quota');"| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance > mail_content
                 # sujet du mail
                 SUBJECT="My CoRe - Liste des comptes n'ayant pas un quota par défaut"
 
@@ -98,6 +97,28 @@ command=$1
 		done
 		SUBJECT="My CoRe - Liste des utilisateurs ne s'étant pas connectés depuis $old_days jours"
 
+# Commande de suppression des users non connectés depuis x jours
+        elif [[ $command == "del_old_usr" ]]
+        then
+                # Entête de mail
+                echo -e "Liste des comptes sur $service.\n" > mail_content
+                # date de référence en timestamp
+                ref_date=`date --date "$expiration days ago" +%s`
+                # commande MySQL
+                echo "SELECT userid FROM oc_preferences WHERE ((configvalue < $ref_date) AND (configkey =  'lastLogin'));"| mysql -h $db_host -u $db_user -p$db_passwd $instance >> mail_content
+		echo -e "\n" >> mail_content
+                for i in $( < mail_content)
+                        do
+                        # Envoie des mails aux utilisateurs si le compte est une adresse email
+                        if [[ $i =~ "@" ]]
+                        then
+			echo "Suppression du compte $i." >> mail_content
+			su $apache_user -s $ownclouddir/occ user:delete $i >> mail_content
+                        fi
+                done
+                SUBJECT="My CoRe - Liste des utilisateurs ne s'étant pas connectés depuis $old_days jours"
+
+
 # Commande de listing des users
         elif [[ $command == "list_usr" ]]
         then
@@ -114,6 +135,7 @@ command=$1
 		echo -e "Bonjour,\n\nVeuillez trouver ci-joint, la liste de tous les utilisateurs.\n\n--\nService My CoRe\nMy CoRe, partage et nomadisme\n---------------------\n" > mail_content
 		# pied de mail
 		echo -e "\n"$0" "$1" executé le "`date '+%d %B %Y'`" sur $HOSTNAME" >> mail_content
+		printf "\n--\nService My CoRe\nMy CoRe, partage et nomadisme." >> mail_content
 		# Envoi du mail
 		cat mail_content | mutt -s "$SUBJECT sur $service" -a list_usr.csv -F "exp.txt" -- $admins
 		#logguer la date d'execution, le script et me nombre de lignes traitées
@@ -123,7 +145,6 @@ command=$1
 # Commande de listing des migrations d'utilisateurs
         elif [[ $command == "list_migr" ]]
         then
-
                 # sujet du mail
                 SUBJECT="My CoRe - Liste des migrations en cours"
                 # Renseignement de l'expediteur
@@ -132,16 +153,33 @@ command=$1
                 sudo -u apache $ownclouddir/occ user_files_migrate:migrate --list > mail_content
                 # pied de mail
                 echo -e "\n"$0" "$1" executé le "`date '+%d %B %Y'`" sur $HOSTNAME" >> mail_content
+		printf "\n--\nService My CoRe\nMy CoRe, partage et nomadisme." >> mail_content
                 # Envoi du mail
                 cat mail_content | mutt -s "$SUBJECT sur $service" -F "exp.txt" -- $admins
                 #logguer la date d'execution, le script et me nombre de lignes traitées
                 echo $actual_date "- execution de "$0" "$1 |logger
                 exit 0
 
+	elif [[ $command == "list_resto" ]]
+        then
+                # sujet du mail
+                SUBJECT="My CoRe - Liste des requêtes de restauration en cours"
+                # Renseignement de l'expediteur
+                printf "set realname=\"$expname\"\nset from=\"$expadd\"\nset use_from" > exp.txt
+                # Contenu du mail
+		sudo -u apache $ownclouddir/occ user_files_restore:list > mail_content
+                # pied de mail
+                echo -e "\n"$0" "$1" executé le "`date '+%d %B %Y'`" sur $HOSTNAME" >> mail_content
+		printf "\n--\nService My CoRe\nMy CoRe, partage et nomadisme." >> mail_content
+                # Envoi du mail
+                cat mail_content | mutt -s "$SUBJECT sur $service" -F "exp.txt" -- $admins
+                #logguer la date d'execution, le script et me nombre de lignes traitées
+                echo $actual_date "- execution de "$0" "$1 |logger
+                exit 0
 	
 	else
 		# Usage
-		echo "usage: "$0" grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr"
+		echo "usage: "$0" grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr|list_resto|del_old_usr"
 		exit 0
 	fi
 
@@ -149,6 +187,7 @@ command=$1
 
 # pied de mail
 echo -e "\n"$0" "$1" executé le "`date '+%d %B %Y'`" sur $HOSTNAME" >> mail_content
+printf "\n--\nService My CoRe\nMy CoRe, partage et nomadisme." >> mail_content
 
 # envoi du mail
 cat mail_content | mail -s "$SUBJECT sur $service" -r "$expname<$expadd>" $admins

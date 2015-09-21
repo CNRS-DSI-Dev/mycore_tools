@@ -7,7 +7,9 @@ Current script provide the following functions :
 * Show unused users accounts (old_usr option of mycore_users.script script)
 * Show users without default files quota (non_def_quota option of mycore_users.script script)
 * Send to IT operational team email end users lists (list_usr option of mycore_users.script script)
+* Delete user who have not been connected for an expiration number of days (del_old_usr option of mycore_users.script script)
 * Show current migration requests, option in relation via user_files_migration app (list_migr option of mycore_users.script script)
+
 
 ## Usage
 
