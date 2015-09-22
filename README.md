@@ -10,6 +10,7 @@ Current script provide the following functions :
 * Delete user who have not been connected for an expiration number of days (del_old_usr option of mycore_users.script script)
 * Show current migration requests, option in relation via user_files_migration app (list_migr option of mycore_users.script script)
 * Add users to groups from a csv file (mycore_add_user_group.sh script)
+* Add users as admin of groups from a csv file (mycore_add_admin_group.sh script)
 
 ## Usage
 
