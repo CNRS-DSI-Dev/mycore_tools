@@ -14,7 +14,10 @@ Current script provide the following functions :
 
 ## Usage
 
-Syntax : usage: ./mycore_users.sh grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr
+Syntax : 
+usage: ./mycore_users.sh grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr
+./mycore_add_user_group.sh <csv_file>
+./mycore_add_admin_group.sh <csv_file>
 
 Nota : list_migr list_migr needs https://github.com/CNRS-DSI-Dev/user_files_migrate installed and activated.
 
