@@ -10,6 +10,7 @@
 # Il permet également de lister tous les utilisateurs avec leurs groupes d'appartenance, leurs quota et leur dernière date de connexion
 # Il permet également de lister les migrations en cours.
 # Il permet également de lister les requêtes de restauration en cours.
+# Il permet également de Supprimer les utilisateurs non connecté depuis x jours
 
 ## PREREQUIS
 # mutt doit être installé
@@ -19,35 +20,35 @@
 ## VARIABLES
 
 # Destinataires (séparer par un espace si besoin de valoriser plusieurs email)
-admins="xxx"
+admins="XXX"
 # Adresse expediteur
-expadd="xxx"
+expadd="XXX"
 # Nom expediteur
-expname="xxx"
+expname="XXX"
 # Instance BDD
-instance="xxx"
+instance="XXX"
 # Utilisateur BDD
-db_user="xxx"
+db_user="XXX"
 # Mot de passe BDD
-db_passwd="xxx"
+db_passwd="XXX"
 # Adresse du serveur BDD
-db_host="xxx"
+db_host="XXX"
 # Port du serveur BDD
-db_port="xxx"
+db_port="XXX"
 # Url du Service
-service="xxx"
+service="XXX"
 # Nombre de jours d'innactivité des comptes
-old_days="30"
+old_days="XXX"
 # Nombre de jours au bout duquel le compte sera succeptible d'être supprimé
-expiration="90"
+expiration="XXX"
 # Quota par défaut
 default_quota=""
 # Chemin de Owncloud
-ownclouddir="xxx"
+ownclouddir="XXX"
 # Options disponibles : grp_null,local_usr,old_usr,non_def_quota,list_usr|list_migr|list_resto|del_old_usr
 command=$1
 # Nom du compte apache
-apache_user="xxx"
+apache_user="XXX"
 
 # Commande de listing des users locaux
         if [[ $command == "local_usr" ]]
@@ -100,8 +101,8 @@ apache_user="xxx"
 # Commande de suppression des users non connectés depuis x jours
         elif [[ $command == "del_old_usr" ]]
         then
-                # Entête de mail
-                echo -e "Liste des comptes sur $service.\n" > mail_content
+		# Entête de mail
+		echo -e "Liste des comptes sur $service.\n" > mail_content
                 # date de référence en timestamp
                 ref_date=`date --date "$expiration days ago" +%s`
                 # commande MySQL
@@ -111,13 +112,22 @@ apache_user="xxx"
                         do
                         # Envoie des mails aux utilisateurs si le compte est une adresse email
                         if [[ $i =~ "@" ]]
-                        then
-			echo "Suppression du compte $i." >> mail_content
-			su $apache_user -s $ownclouddir/occ user:delete $i >> mail_content
-                        fi
+                        	then
+				mailto=$i
+				echo -e "Bonjour,\n\nVous disposez du compte "$i" sur le service My CoRe, "$service". Ce compte n'a pas été utilisé depuis "$expiration" jours.\nCe compte va être supprimé.\n\nSi besoin d'information complémentaire sur ce message, merci de contacter votre support régional de proximité : http://www.offres-de-services-unites.net/contacts.html\n\n--\nService My CoRe\nMy CoRe, partage et nomadisme\n---------------------" | mail -s "$subject sur $service" -r "$EXP" $mailto
+				# Test si le compte est un compte admin
+				if [[ ! -n `echo "SELECT uid FROM oc_group_user WHERE (gid = 'admin') && (uid = '$i') "| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance --skip-column-names` ]]
+                        		then
+					echo "Suppression du compte $i." >> mail_content
+                        		su $apache_user -s $ownclouddir/occ user:delete $i >> mail_content
+					else
+					echo "Le compte $i est un compte admin." >> mail_content
+				fi
+                        	else
+				echo "Le compte $i n'étant pas une adresse email, il n'a pas été supprimé." >> mail_content
+			fi
                 done
-                SUBJECT="My CoRe - Liste des utilisateurs ne s'étant pas connectés depuis $old_days jours"
-
+                SUBJECT="My CoRe - Suppression des utilisateurs ne s'étant pas connectés depuis $expiration jours"
 
 # Commande de listing des users
         elif [[ $command == "list_usr" ]]

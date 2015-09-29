@@ -16,11 +16,16 @@ Current script provide the following functions :
 
 Syntax : 
 usage: 
-* ./mycore_users.sh grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr
+* ./mycore_users.sh grp_null|local_usr|old_usr|non_def_quota|list_usr|list_migr|list_resto|del_old_usr
 * ./mycore_add_user_group.sh csv_file
 * ./mycore_add_admin_group.sh csv_file
 
-Nota : list_migr list_migr needs https://github.com/CNRS-DSI-Dev/user_files_migrate installed and activated.
+Nota : 
+* list_migr needs https://github.com/CNRS-DSI-Dev/user_files_migrate installed and activated.
+* list_resto needs https://github.com/CNRS-DSI-Dev/user_files_restore installed and activated.
+* mutt and mysql client must be installed
+* Owncloud must use MySQL database
+* The scripts must be able to access the owncloud database
 
 ## Contributing
 

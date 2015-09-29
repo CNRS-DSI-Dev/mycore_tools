@@ -8,31 +8,35 @@
 # le client mysql doit être installé
 # le script doit avoir accès à la base de donnée
 
+# Le format du fichier csv doit être du type :
+# user1 group1
+# user1 group2
+# user2 group3
+# ...
+
 
 ## VARIABLES
 
 # Destinataires (séparer par un espace si besoin de valoriser plusieurs email)
-#admins="mycore.moe@dsi.cnrs.fr"
-admins="xxx"
+admins="XXX"
 # Adresse expediteur
-expadd="xxx"
+expadd="XXX"
 # Nom expediteur
-expname="xxx"
+expname="XXX"
 # Sujet du mail
-SUBJECT="xxx"
+SUBJECT="My CoRe - Ajout massif d'utilisateurs"
 # Instance BDD
-instance="xxx"
+instance="XXX"
 # Utilisateur BDD
-db_user="xxx"
+db_user="XXX"
 # Mot de passe BDD
-db_passwd="xxx"
+db_passwd="XXX"
 # Adresse du serveur BDD
-db_host="xxx"
+db_host="XXX"
 # Port du serveur BDD
-db_port="xxx"
+db_port="XXX"
 # Url du Service
-service="xxx"
-# Chemin de Owncloud
+service="XXX"
 liste_csv="$1"
 
 #usage
