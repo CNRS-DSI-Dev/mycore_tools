@@ -114,7 +114,7 @@ apache_user="XXX"
                         if [[ $i =~ "@" ]]
                         	then
 				mailto=$i
-				echo -e "Bonjour,\n\nVous disposez du compte "$i" sur le service My CoRe, "$service". Ce compte n'a pas été utilisé depuis "$expiration" jours.\nCe compte va être supprimé.\n\nSi besoin d'information complémentaire sur ce message, merci de contacter votre support régional de proximité : http://www.offres-de-services-unites.net/contacts.html\n\n--\nService My CoRe\nMy CoRe, partage et nomadisme\n---------------------" | mail -s "$subject sur $service" -r "$EXP" $mailto
+				echo -e "Bonjour,\n\nVous disposez du compte "$i" sur le service My CoRe, "$service". Ce compte n'a pas été utilisé depuis "$expiration" jours.\nCe compte va être supprimé.\n\nSi besoin d'information complémentaire sur ce message, merci de contacter votre support régional de proximité : http://www.offres-de-services-unites.net/contacts.html\n\n--\nService My CoRe\nMy CoRe, partage et nomadisme\n---------------------" | mail -s "$subject sur $service" -r "$expname<$expadd>" $mailto
 				# Test si le compte est un compte admin
 				if [[ ! -n `echo "SELECT uid FROM oc_group_user WHERE (gid = 'admin') && (uid = '$i') "| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance --skip-column-names` ]]
                         		then
