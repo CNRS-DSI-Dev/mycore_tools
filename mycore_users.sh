@@ -74,7 +74,7 @@ apache_user="XXX"
         elif [[ $command == "non_def_quota" ]]
         then
                 # on récupère en base les utilisateurs et leur quota personnalisé
-                echo "SELECT userid, configvalue FROM  oc_preferences WHERE (configkey =  'quota');"| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance > mail_content
+                echo "SELECT userid, configvalue FROM  oc_preferences WHERE ((configkey =  'quota')&&(configvalue != 'default'));"| mysql -h $db_host -u $db_user -P $db_port -p$db_passwd $instance > mail_content
                 # sujet du mail
                 SUBJECT="My CoRe - Liste des comptes n'ayant pas un quota par défaut"
 
